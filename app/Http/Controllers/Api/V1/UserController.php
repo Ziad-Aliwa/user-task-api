@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Users\StoreUserRequest;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
@@ -17,14 +18,9 @@ class UserController extends Controller
         return $this->successResponse($users, 'Users retrieved successfully');
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'username' => 'required|string|unique:users,username',
-            'email' => 'required|email|unique:users,email',
-        ]);
-
-        $user = User::create($validated);
+        $user = User::create($request->validated());
         return $this->successResponse($user, 'User created successfully', 201);
     }
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tasks\StoreTaskRequest;
+use App\Http\Requests\Tasks\UpdateTaskRequest;
 use App\Models\Task;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
@@ -23,16 +25,9 @@ class TaskController extends Controller
         return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'nullable|in:pending,in-progress,completed',
-            'user_id' => 'required|exists:users,id',
-        ]);
-
-        $task = Task::create($validated);
+        $task = Task::create($request->validated());
         return $this->successResponse($task, 'Task created successfully', 201);
     }
 
@@ -46,20 +41,14 @@ class TaskController extends Controller
         return $this->successResponse($task, 'Task retrieved successfully');
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateTaskRequest $request, $id)
     {
         $task = Task::find($id);
         if (!$task) {
             return $this->notFoundResponse('Task not found');
         }
 
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'sometimes|required|in:pending,in-progress,completed',
-        ]);
-
-        $task->update($validated);
+        $task->update($request->validated());
         return $this->successResponse($task, 'Task updated successfully');
     }
 

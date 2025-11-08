@@ -21,7 +21,9 @@ class TaskController extends Controller
             $query->where('user_id', $request->userId);
         }
 
-        $tasks = $query->get();
+        $perPage = $request->query('per_page', 10);
+        $tasks = $query->paginate($perPage);
+
         return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }
 

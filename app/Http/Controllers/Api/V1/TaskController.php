@@ -27,14 +27,14 @@ class TaskController extends Controller
             $perPage = $request->query('per_page', 10);
             $tasks = $query->paginate($perPage);
 
-            Log::info('Tasks fetched successfully', [
+            Log::channel('api')->info('Tasks fetched successfully', [
                 'userId' => $request->query('userId'),
                 'count' => $tasks->count(),
             ]);
 
             return $this->successResponse($tasks, 'Tasks retrieved successfully');
         } catch (Throwable $e) {
-            Log::error('Error fetching tasks', ['error' => $e->getMessage()]);
+            Log::channel('api')->error('Error fetching tasks', ['error' => $e->getMessage()]);
             return $this->errorResponse('Failed to retrieve tasks', 500);
         }
     }
@@ -44,14 +44,14 @@ class TaskController extends Controller
         try {
             $task = Task::create($request->validated());
 
-            Log::info('Task created successfully', [
+            Log::channel('api')->info('Task created successfully', [
                 'task_id' => $task->id,
                 'user_id' => $task->user_id,
             ]);
 
             return $this->successResponse($task, 'Task created successfully', 201);
         } catch (Throwable $e) {
-            Log::error('Error creating task', [
+            Log::channel('api')->error('Error creating task', [
                 'error' => $e->getMessage(),
                 'data' => $request->all(),
             ]);
@@ -64,14 +64,14 @@ class TaskController extends Controller
         try {
             $task = Task::find($id);
             if (!$task) {
-                Log::warning('Task not found', ['task_id' => $id]);
+                Log::channel('api')->warning('Task not found', ['task_id' => $id]);
                 return $this->notFoundResponse('Task not found');
             }
 
-            Log::info('Task retrieved successfully', ['task_id' => $id]);
+            Log::channel('api')->info('Task retrieved successfully', ['task_id' => $id]);
             return $this->successResponse($task, 'Task retrieved successfully');
         } catch (Throwable $e) {
-            Log::error('Error retrieving task', ['error' => $e->getMessage(), 'task_id' => $id]);
+            Log::channel('api')->error('Error retrieving task', ['error' => $e->getMessage(), 'task_id' => $id]);
             return $this->errorResponse('Failed to retrieve task', 500);
         }
     }
@@ -81,16 +81,16 @@ class TaskController extends Controller
         try {
             $task = Task::find($id);
             if (!$task) {
-                Log::warning('Task not found for update', ['task_id' => $id]);
+                Log::channel('api')->warning('Task not found for update', ['task_id' => $id]);
                 return $this->notFoundResponse('Task not found');
             }
 
             $task->update($request->validated());
 
-            Log::info('Task updated successfully', ['task_id' => $id]);
+            Log::channel('api')->info('Task updated successfully', ['task_id' => $id]);
             return $this->successResponse($task, 'Task updated successfully');
         } catch (Throwable $e) {
-            Log::error('Error updating task', [
+            Log::channel('api')->error('Error updating task', [
                 'error' => $e->getMessage(),
                 'task_id' => $id,
                 'data' => $request->all(),
@@ -104,16 +104,16 @@ class TaskController extends Controller
         try {
             $task = Task::find($id);
             if (!$task) {
-                Log::warning('Task not found for deletion', ['task_id' => $id]);
+                Log::channel('api')->warning('Task not found for deletion', ['task_id' => $id]);
                 return $this->notFoundResponse('Task not found');
             }
 
             $task->delete();
 
-            Log::info('Task deleted successfully', ['task_id' => $id]);
+            Log::channel('api')->info('Task deleted successfully', ['task_id' => $id]);
             return $this->successResponse(null, 'Task deleted successfully', 204);
         } catch (Throwable $e) {
-            Log::error('Error deleting task', ['error' => $e->getMessage(), 'task_id' => $id]);
+            Log::channel('api')->error('Error deleting task', ['error' => $e->getMessage(), 'task_id' => $id]);
             return $this->errorResponse('Failed to delete task', 500);
         }
     }

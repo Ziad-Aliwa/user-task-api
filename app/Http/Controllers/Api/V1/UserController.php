@@ -20,14 +20,14 @@ class UserController extends Controller
             $perPage = $request->query('per_page', 10);
             $users = User::paginate($perPage);
 
-            Log::info('Users fetched successfully', [
+            Log::channel('api')->info('Users fetched successfully', [
                 'per_page' => $perPage,
                 'count' => $users->count(),
             ]);
 
             return $this->successResponse($users, 'Users retrieved successfully');
         } catch (Throwable $e) {
-            Log::error('Error fetching users', [
+            Log::channel('api')->error('Error fetching users', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -40,14 +40,14 @@ class UserController extends Controller
         try {
             $user = User::create($request->validated());
 
-            Log::info('User created successfully', [
+            Log::channel('api')->info('User created successfully', [
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
 
             return $this->successResponse($user, 'User created successfully', 201);
         } catch (Throwable $e) {
-            Log::error('Error creating user', [
+            Log::channel('api')->error('Error creating user', [
                 'error' => $e->getMessage(),
                 'input' => $request->all(),
             ]);
@@ -61,14 +61,14 @@ class UserController extends Controller
             $user = User::find($id);
 
             if (!$user) {
-                Log::warning('User not found', ['user_id' => $id]);
+                Log::channel('api')->warning('User not found', ['user_id' => $id]);
                 return $this->notFoundResponse('User not found');
             }
 
-            Log::info('User retrieved successfully', ['user_id' => $id]);
+            Log::channel('api')->info('User retrieved successfully', ['user_id' => $id]);
             return $this->successResponse($user, 'User retrieved successfully');
         } catch (Throwable $e) {
-            Log::error('Error retrieving user', [
+            Log::channel('api')->error('Error retrieving user', [
                 'error' => $e->getMessage(),
                 'user_id' => $id,
             ]);

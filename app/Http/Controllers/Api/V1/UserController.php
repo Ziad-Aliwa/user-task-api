@@ -4,33 +4,31 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\StoreUserRequest;
-use App\Models\User;
+use App\Services\UserService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class UserController extends Controller
 {
     use ApiResponseTrait;
 
+    protected $userService;
+
+    // inject the service
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function index(Request $request)
     {
         try {
             $perPage = $request->query('per_page', 10);
-            $users = User::paginate($perPage);
-
-            Log::channel('api')->info('Users fetched successfully', [
-                'per_page' => $perPage,
-                'count' => $users->count(),
-            ]);
+            $users = $this->userService->getAllUsers($perPage);
 
             return $this->successResponse($users, 'Users retrieved successfully');
         } catch (Throwable $e) {
-            Log::channel('api')->error('Error fetching users', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
             return $this->errorResponse('Failed to retrieve users', 500);
         }
     }
@@ -38,19 +36,10 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         try {
-            $user = User::create($request->validated());
-
-            Log::channel('api')->info('User created successfully', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ]);
+            $user = $this->userService->createUser($request->validated());
 
             return $this->successResponse($user, 'User created successfully', 201);
         } catch (Throwable $e) {
-            Log::channel('api')->error('Error creating user', [
-                'error' => $e->getMessage(),
-                'input' => $request->all(),
-            ]);
             return $this->errorResponse('Failed to create user', 500);
         }
     }
@@ -58,20 +47,14 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = User::find($id);
+            $user = $this->userService->getUserById($id);
 
             if (!$user) {
-                Log::channel('api')->warning('User not found', ['user_id' => $id]);
                 return $this->notFoundResponse('User not found');
             }
 
-            Log::channel('api')->info('User retrieved successfully', ['user_id' => $id]);
             return $this->successResponse($user, 'User retrieved successfully');
         } catch (Throwable $e) {
-            Log::channel('api')->error('Error retrieving user', [
-                'error' => $e->getMessage(),
-                'user_id' => $id,
-            ]);
             return $this->errorResponse('Failed to retrieve user', 500);
         }
     }

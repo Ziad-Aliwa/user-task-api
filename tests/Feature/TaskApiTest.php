@@ -6,15 +6,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Task;
+use PHPUnit\Framework\Test;
 
 class TaskApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Test creating a task successfully
-     */
-    public function test_create_task_successfully()
+    #[Test]
+    public function test_creates_a_task_successfully()
     {
         $user = User::factory()->create();
 
@@ -27,7 +26,7 @@ class TaskApiTest extends TestCase
 
         $response = $this->postJson('/api/v1/tasks', $data);
 
-        $response->assertStatus(201)
+        $response->assertCreated()
             ->assertJson([
                 'success' => true,
                 'message' => 'Task created successfully',
@@ -41,15 +40,13 @@ class TaskApiTest extends TestCase
         $this->assertDatabaseHas('tasks', ['title' => 'Test Task']);
     }
 
-    /**
-     * Test validation errors when creating a task
-     */
-    public function test_create_task_validation_error()
+    #[Test]
+    public function test_fails_validation_when_creating_task()
     {
         $data = [
-            'title' => '', // missing title
-            'status' => 'invalid-status', // invalid enum
-            'user_id' => 999, // non-existent user
+            'title' => '',
+            'status' => 'invalid-status',
+            'user_id' => 999,
         ];
 
         $response = $this->postJson('/api/v1/tasks', $data);
@@ -58,17 +55,15 @@ class TaskApiTest extends TestCase
             ->assertJsonValidationErrors(['title', 'status', 'user_id']);
     }
 
-    /**
-     * Test retrieving all tasks with optional filtering by user
-     */
-    public function test_get_tasks_list()
+    #[Test]
+    public function test_returns_paginated_tasks_list_with_user_filter()
     {
         $user = User::factory()->create();
         Task::factory()->count(5)->create(['user_id' => $user->id]);
 
         $response = $this->getJson('/api/v1/tasks?userId=' . $user->id . '&per_page=3');
 
-        $response->assertStatus(200)
+        $response->assertOk()
             ->assertJsonStructure([
                 'success',
                 'message',
@@ -82,19 +77,17 @@ class TaskApiTest extends TestCase
                 ]
             ]);
 
-        $this->assertCount(3, $response->json('data.data')); // per_page=3
+        $this->assertCount(3, $response->json('data.data'));
     }
 
-    /**
-     * Test retrieving a single task
-     */
-    public function test_get_single_task_success()
+    #[Test]
+    public function test_retrieves_a_single_task_successfully()
     {
         $task = Task::factory()->create();
 
         $response = $this->getJson("/api/v1/tasks/{$task->id}");
 
-        $response->assertStatus(200)
+        $response->assertOk()
             ->assertJson([
                 'success' => true,
                 'message' => 'Task retrieved successfully',
@@ -105,28 +98,22 @@ class TaskApiTest extends TestCase
             ]);
     }
 
-    /**
-     * Test retrieving a non-existing task
-     */
-    public function test_get_single_task_not_found()
+    #[Test]
+    public function test_returns_not_found_when_task_does_not_exist()
     {
-        $response = $this->getJson("/api/v1/tasks/99999");
+        $response = $this->getJson('/api/v1/tasks/99999');
 
-        $response->assertStatus(404)
+        $response->assertNotFound()
             ->assertJson([
                 'success' => false,
                 'message' => 'Task not found'
             ]);
     }
 
-    /**
-     * Test updating a task
-     */
-    public function test_update_task_success()
+    #[Test]
+    public function test_updates_a_task_successfully()
     {
-        $task = Task::factory()->create([
-            'status' => 'pending'
-        ]);
+        $task = Task::factory()->create(['status' => 'pending']);
 
         $data = [
             'title' => 'Updated Task Title',
@@ -135,7 +122,7 @@ class TaskApiTest extends TestCase
 
         $response = $this->putJson("/api/v1/tasks/{$task->id}", $data);
 
-        $response->assertStatus(200)
+        $response->assertOk()
             ->assertJson([
                 'success' => true,
                 'message' => 'Task updated successfully',
@@ -148,17 +135,14 @@ class TaskApiTest extends TestCase
         $this->assertDatabaseHas('tasks', ['title' => 'Updated Task Title', 'status' => 'in-progress']);
     }
 
-    /**
-     * Test deleting a task
-     */
-    public function test_delete_task_success()
+    #[Test]
+    public function test_deletes_a_task_successfully()
     {
         $task = Task::factory()->create();
 
         $response = $this->deleteJson("/api/v1/tasks/{$task->id}");
 
-        $response->assertStatus(204);
-
+        $response->assertNoContent();
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
     }
 }

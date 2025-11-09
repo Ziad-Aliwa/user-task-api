@@ -5,15 +5,14 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
+use PHPUnit\Framework\Test;
 
 class UserApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Test creating a user successfully
-     */
-    public function test_create_user_successfully()
+    #[Test]
+    public function test_creates_a_user_successfully()
     {
         $data = [
             'username' => 'Test User',
@@ -22,7 +21,7 @@ class UserApiTest extends TestCase
 
         $response = $this->postJson('/api/v1/users', $data);
 
-        $response->assertStatus(201)
+        $response->assertCreated()
             ->assertJson([
                 'success' => true,
                 'message' => 'User created successfully',
@@ -35,38 +34,34 @@ class UserApiTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'testuser@example.com']);
     }
 
-    /**
-     * Test validation errors when creating a user
-     */
-    public function test_create_user_validation_error()
+    #[Test]
+    public function test_fails_validation_when_creating_user()
     {
         $data = [
-            'username' => '', // missing username
-            'email' => 'not-an-email' // invalid email
+            'username' => '',
+            'email' => 'invalid-email'
         ];
 
         $response = $this->postJson('/api/v1/users', $data);
 
-        $response->assertStatus(422) // Laravel returns 422 for validation errors
+        $response->assertStatus(422)
             ->assertJsonValidationErrors(['username', 'email']);
     }
 
-    /**
-     * Test retrieving a list of users with pagination
-     */
-    public function test_get_users_list()
+    #[Test]
+    public function test_returns_paginated_users_list()
     {
         User::factory()->count(5)->create();
 
         $response = $this->getJson('/api/v1/users?per_page=3');
 
-        $response->assertStatus(200)
+        $response->assertOk()
             ->assertJsonStructure([
                 'success',
                 'message',
                 'data' => [
                     'current_page',
-                    'data', // list of users
+                    'data',
                     'first_page_url',
                     'last_page',
                     'per_page',
@@ -74,19 +69,17 @@ class UserApiTest extends TestCase
                 ]
             ]);
 
-        $this->assertCount(3, $response->json('data.data')); // per_page=3
+        $this->assertCount(3, $response->json('data.data'));
     }
 
-    /**
-     * Test retrieving a single user
-     */
-    public function test_get_single_user_success()
+    #[Test]
+    public function test_retrieves_a_single_user_successfully()
     {
         $user = User::factory()->create();
 
         $response = $this->getJson("/api/v1/users/{$user->id}");
 
-        $response->assertStatus(200)
+        $response->assertOk()
             ->assertJson([
                 'success' => true,
                 'message' => 'User retrieved successfully',
@@ -98,14 +91,12 @@ class UserApiTest extends TestCase
             ]);
     }
 
-    /**
-     * Test retrieving a non-existing user
-     */
-    public function test_get_single_user_not_found()
+    #[Test]
+    public function test_returns_not_found_when_user_does_not_exist()
     {
-        $response = $this->getJson("/api/v1/users/99999");
+        $response = $this->getJson('/api/v1/users/99999');
 
-        $response->assertStatus(404)
+        $response->assertNotFound()
             ->assertJson([
                 'success' => false,
                 'message' => 'User not found'

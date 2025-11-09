@@ -87,4 +87,29 @@ php artisan test --filter=TaskApiTest
 License
 MIT
 
- 
+Postman Collection
+
+You can import the Postman collection from:
+
+postman/UserTaskAPI.postman_collection.json
+
+
+This collection includes all routes for:
+
+Users
+
+Tasks
+
+Example requests & responses
+
+🧰 Tech Stack
+
+Framework: Laravel 11
+
+Database: MySQL / SQLite (for testing)
+
+Language: PHP 8.2+
+
+Testing: PHPUnit
+
+Logging: Monolog custom channel
